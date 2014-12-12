@@ -46,22 +46,27 @@
 /**
  Specifies the localized string used to express the past deictic expression. "ago" by default.
  */
-@property (nonatomic, strong) NSString *pastDeicticExpression;
+@property (nonatomic, copy) NSString *pastDeicticExpression;
 
 /**
  Specifies the localized string used to express the present deictic expression. "just now" by default.
  */
-@property (nonatomic, strong) NSString *presentDeicticExpression;
+@property (nonatomic, copy) NSString *presentDeicticExpression;
 
 /**
  Specifies the localized string used to express the future deictic expression. "from now" by default.
  */
-@property (nonatomic, strong) NSString *futureDeicticExpression;
+@property (nonatomic, copy) NSString *futureDeicticExpression;
 
 /**
  Specifies the localized string used to format the time interval string and deictic expression. Defaults to a format with the deictic expression following the time interval
  */
-@property (nonatomic, strong) NSString *deicticExpressionFormat;
+@property (nonatomic, copy) NSString *deicticExpressionFormat;
+
+/**
+ Specifies the localized string used to format the time with its suffix. "#{Time} #{Unit}" by default.
+ */
+@property (nonatomic, strong) NSString *suffixExpressionFormat;
 
 /**
  Specifies the time interval before and after the present moment that is described as still being in the present, rather than the past or future. Defaults to 1 second.
@@ -82,7 +87,7 @@
 /**
  Specifies the localized string used to qualify a time interval as being an approximate time. "about" by default.
  */
-@property (nonatomic, strong) NSString *approximateQualifierFormat;
+@property (nonatomic, copy) NSString *approximateQualifierFormat;
 
 /**
  Specifies whether to use an approximate qualifier when the described interval is not exact. `NO` by default.
@@ -94,12 +99,17 @@
 ///------------------------------------
 
 /**
+ A bitmask specifying the significant units. Defaults to a bitmask of year, month, week, day, hour, minute, and second.
+ */
+@property (nonatomic, assign) NSCalendarUnit significantUnits;
+
+/**
  Specifies the number of units that should be displayed before approximating. `0` to show all units. `1` by default.
  */
 @property (nonatomic, assign) NSUInteger numberOfSignificantUnits;
 
 /**
- Specifies the least significant unit that should be displayed when not approximating. Defaults to `NSCalendarUnitSeconds`. Must be any of year through to second inclusive.
+ Specifies the least significant unit that should be displayed when not approximating. Defaults to `NSCalendarUnitSeconds`.
  */
 @property (nonatomic, assign) NSCalendarUnit leastSignificantUnit;
 

@@ -65,6 +65,8 @@ NSString *const kPAPUserProfilePicSmallKey                      = @"profilePictu
 NSString *const kPAPUserProfilePicMediumKey                     = @"profilePictureMedium";
 NSString *const kPAPUserFacebookFriendsKey                      = @"facebookFriends";
 NSString *const kPAPUserAlreadyAutoFollowedFacebookFriendsKey   = @"userAlreadyAutoFollowedFacebookFriends";
+NSString *const kPAPUserEmailKey                                = @"email";
+NSString *const kPAPUserAutoFollowKey                           = @"autoFollow";
 
 #pragma mark - Photo Class
 // Class key

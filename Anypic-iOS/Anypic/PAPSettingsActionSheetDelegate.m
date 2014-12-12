@@ -49,8 +49,7 @@ typedef enum {
     switch ((kPAPSettingsActionSheetButtons)buttonIndex) {
         case kPAPSettingsProfile:
         {
-            PAPAccountViewController *accountViewController = [[PAPAccountViewController alloc] initWithStyle:UITableViewStylePlain];
-            [accountViewController setUser:[PFUser currentUser]];
+            PAPAccountViewController *accountViewController = [[PAPAccountViewController alloc] initWithUser:[PFUser currentUser]];
             [navController pushViewController:accountViewController animated:YES];
             break;
         }

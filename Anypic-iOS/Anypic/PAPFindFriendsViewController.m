@@ -38,21 +38,21 @@ typedef enum {
 - (id)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self) {
-        
+
         self.outstandingFollowQueries = [NSMutableDictionary dictionary];
         self.outstandingCountQueries = [NSMutableDictionary dictionary];
-        
+
         self.selectedEmailAddress = @"";
 
         // Whether the built-in pull-to-refresh is enabled
         self.pullToRefreshEnabled = YES;
-        
+
         // Whether the built-in pull-to-refresh is enabled
         self.pullToRefreshEnabled = YES;
 
         // The number of objects to show per page
         self.objectsPerPage = 15;
-        
+
         // Used to determine Follow/Unfollow All button status
         self.followStatus = PAPFindFriendsFollowingSome;
     }
@@ -64,18 +64,15 @@ typedef enum {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 
-    UIView *texturedBackgroundView = [[UIView alloc] initWithFrame:self.view.bounds];
-    [texturedBackgroundView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"BackgroundLeather.png"]]];
-    self.tableView.backgroundView = texturedBackgroundView;
-        
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableView.backgroundColor = [UIColor blackColor];
+
     self.navigationItem.titleView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"TitleFindFriends.png"]];
-    
+
     if ([MFMailComposeViewController canSendMail] || [MFMessageComposeViewController canSendText]) {
         self.headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 67)];
-        [self.headerView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"BackgroundFindFriendsCell.png"]]];
+        [self.headerView setBackgroundColor:[UIColor blackColor]];
         UIButton *clearButton = [UIButton buttonWithType:UIButtonTypeCustom];
         [clearButton setBackgroundColor:[UIColor clearColor]];
         [clearButton addTarget:self action:@selector(inviteFriendsButtonAction:) forControlEvents:UIControlEventTouchUpInside];
@@ -87,20 +84,21 @@ typedef enum {
                                                       attributes:@{NSFontAttributeName:[UIFont boldSystemFontOfSize:18.0f]}
                                                          context:nil];
         CGSize inviteStringSize = boundingRect.size;
-        
+
         UILabel *inviteLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, (self.headerView.frame.size.height-inviteStringSize.height)/2, inviteStringSize.width, inviteStringSize.height)];
         [inviteLabel setText:inviteString];
         [inviteLabel setFont:[UIFont boldSystemFontOfSize:18]];
-        [inviteLabel setTextColor:[UIColor colorWithRed:87.0f/255.0f green:72.0f/255.0f blue:49.0f/255.0f alpha:1.0]];
+        [inviteLabel setTextColor:[UIColor whiteColor]];
         [inviteLabel setBackgroundColor:[UIColor clearColor]];
         [self.headerView addSubview:inviteLabel];
-        UIImageView *separatorImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"SeparatorTimeline.png"]];
-        [separatorImage setFrame:CGRectMake(0, self.headerView.frame.size.height-2, 320, 2)];
-        [self.headerView addSubview:separatorImage];
         [self.tableView setTableHeaderView:self.headerView];
     }
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.tableView.separatorColor = [UIColor colorWithRed:30.0f/255.0f green:30.0f/255.0f blue:30.0f/255.0f alpha:1.0f];
+}
 
 #pragma mark - UITableViewDelegate
 
@@ -118,39 +116,38 @@ typedef enum {
 - (PFQuery *)queryForTable {
     // Use cached facebook friend ids
     NSArray *facebookFriends = [[PAPCache sharedCache] facebookFriends];
-    
+
     // Query for all friends you have on facebook and who are using the app
     PFQuery *friendsQuery = [PFUser query];
     [friendsQuery whereKey:kPAPUserFacebookIDKey containedIn:facebookFriends];
-    
+
     // Query for all Parse employees
     NSMutableArray *parseEmployees = [[NSMutableArray alloc] initWithArray:kPAPParseEmployeeAccounts];
     [parseEmployees removeObject:[[PFUser currentUser] objectForKey:kPAPUserFacebookIDKey]];
     PFQuery *parseEmployeeQuery = [PFUser query];
     [parseEmployeeQuery whereKey:kPAPUserFacebookIDKey containedIn:parseEmployees];
-        
-    // Combine the two queries with an OR
+
     PFQuery *query = [PFQuery orQueryWithSubqueries:[NSArray arrayWithObjects:friendsQuery, parseEmployeeQuery, nil]];
     query.cachePolicy = kPFCachePolicyNetworkOnly;
-    
+
     if (self.objects.count == 0) {
         query.cachePolicy = kPFCachePolicyCacheThenNetwork;
     }
-    
+
     [query orderByAscending:kPAPUserDisplayNameKey];
-    
+
     return query;
 }
 
 - (void)objectsDidLoad:(NSError *)error {
     [super objectsDidLoad:error];
-    
+
     PFQuery *isFollowingQuery = [PFQuery queryWithClassName:kPAPActivityClassKey];
     [isFollowingQuery whereKey:kPAPActivityFromUserKey equalTo:[PFUser currentUser]];
     [isFollowingQuery whereKey:kPAPActivityTypeKey equalTo:kPAPActivityTypeFollow];
     [isFollowingQuery whereKey:kPAPActivityToUserKey containedIn:self.objects];
     [isFollowingQuery setCachePolicy:kPFCachePolicyNetworkOnly];
-    
+
     [isFollowingQuery countObjectsInBackgroundWithBlock:^(int number, NSError *error) {
         if (!error) {
             if (number == self.objects.count) {
@@ -170,12 +167,12 @@ typedef enum {
                 [self configureFollowAllButton];
             }
         }
-        
+
         if (self.objects.count == 0) {
             self.navigationItem.rightBarButtonItem = nil;
         }
     }];
-    
+
     if (self.objects.count == 0) {
         self.navigationItem.rightBarButtonItem = nil;
     }
@@ -183,19 +180,19 @@ typedef enum {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath object:(PFObject *)object {
     static NSString *FriendCellIdentifier = @"FriendCell";
-    
+
     PAPFindFriendsCell *cell = [tableView dequeueReusableCellWithIdentifier:FriendCellIdentifier];
     if (cell == nil) {
         cell = [[PAPFindFriendsCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:FriendCellIdentifier];
         [cell setDelegate:self];
     }
-    
+
     [cell setUser:(PFUser*)object];
 
     [cell.photoLabel setText:@"0 photos"];
-    
+
     NSDictionary *attributes = [[PAPCache sharedCache] attributesForUser:(PFUser *)object];
-    
+
     if (attributes) {
         // set them now
         NSNumber *number = [[PAPCache sharedCache] photoCountForUser:(PFUser *)object];
@@ -222,7 +219,7 @@ typedef enum {
 
     cell.followButton.selected = NO;
     cell.tag = indexPath.row;
-    
+
     if (self.followStatus == PAPFindFriendsFollowingSome) {
         if (attributes) {
             [cell.followButton setSelected:[[PAPCache sharedCache] followStatusForUser:(PFUser *)object]];
@@ -236,7 +233,7 @@ typedef enum {
                     [isFollowingQuery whereKey:kPAPActivityTypeKey equalTo:kPAPActivityTypeFollow];
                     [isFollowingQuery whereKey:kPAPActivityToUserKey equalTo:object];
                     [isFollowingQuery setCachePolicy:kPFCachePolicyCacheThenNetwork];
-                    
+
                     [isFollowingQuery countObjectsInBackgroundWithBlock:^(int number, NSError *error) {
                         @synchronized(self) {
                             [self.outstandingFollowQueries removeObjectForKey:indexPath];
@@ -252,24 +249,24 @@ typedef enum {
     } else {
         [cell.followButton setSelected:(self.followStatus == PAPFindFriendsFollowingAll)];
     }
-    
+
     return cell;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForNextPageAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *NextPageCellIdentifier = @"NextPageCell";
-    
+
     PAPLoadMoreCell *cell = [tableView dequeueReusableCellWithIdentifier:NextPageCellIdentifier];
-    
+
     if (cell == nil) {
         cell = [[PAPLoadMoreCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:NextPageCellIdentifier];
-        [cell.mainView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"BackgroundFindFriendsCell.png"]]];
+        [cell.mainView setBackgroundColor:[UIColor blackColor]];
         cell.hideSeparatorBottom = YES;
         cell.hideSeparatorTop = YES;
     }
-    
-    cell.selectionStyle = UITableViewCellSelectionStyleGray;
-    
+
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+
     return cell;
 }
 
@@ -279,6 +276,7 @@ typedef enum {
 - (void)cell:(PAPFindFriendsCell *)cellView didTapUserButton:(PFUser *)aUser {
     // Push account view controller
     PAPAccountViewController *accountViewController = [[PAPAccountViewController alloc] initWithStyle:UITableViewStylePlain];
+    NSLog(@"Presenting account view controller with user: %@", aUser);
     [accountViewController setUser:aUser];
     [self.navigationController pushViewController:accountViewController animated:YES];
 }
@@ -325,12 +323,12 @@ typedef enum {
     } else if (property == kABPersonPhoneProperty) {
         ABMultiValueRef phoneProperty = ABRecordCopyValue(person,property);
         NSString *phone = (__bridge_transfer NSString *)ABMultiValueCopyValueAtIndex(phoneProperty,identifier);
-        
+
         if ([MFMessageComposeViewController canSendText]) {
             [self presentMessageComposeViewController:phone];
         }
     }
-    
+
     return NO;
 }
 
@@ -373,7 +371,7 @@ typedef enum {
 - (void)inviteFriendsButtonAction:(id)sender {
     ABPeoplePickerNavigationController *addressBook = [[ABPeoplePickerNavigationController alloc] init];
     addressBook.peoplePickerDelegate = self;
-    
+
     if ([MFMailComposeViewController canSendMail] && [MFMessageComposeViewController canSendText]) {
         addressBook.displayedProperties = [NSArray arrayWithObjects:[NSNumber numberWithInt:kABPersonEmailProperty], [NSNumber numberWithInt:kABPersonPhoneProperty], nil];
     } else if ([MFMailComposeViewController canSendMail]) {
@@ -390,10 +388,10 @@ typedef enum {
 
     self.followStatus = PAPFindFriendsFollowingAll;
     [self configureUnfollowAllButton];
-    
+
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 0.01 * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Unfollow All" style:UIBarButtonItemStyleBordered target:self action:@selector(unfollowAllFriendsButtonAction:)];
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Unfollow All" style:UIBarButtonItemStylePlain target:self action:@selector(unfollowAllFriendsButtonAction:)];
 
         NSMutableArray *indexPaths = [NSMutableArray arrayWithCapacity:self.objects.count];
         for (int r = 0; r < self.objects.count; r++) {
@@ -403,10 +401,10 @@ typedef enum {
             cell.followButton.selected = YES;
             [indexPaths addObject:indexPath];
         }
-        
+
         [self.tableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
         [MBProgressHUD hideAllHUDsForView:[UIApplication sharedApplication].keyWindow animated:YES];
-        
+
         NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:2.0f target:self selector:@selector(followUsersTimerFired:) userInfo:nil repeats:NO];
         [PAPUtility followUsersEventually:self.objects block:^(BOOL succeeded, NSError *error) {
             // note -- this block is called once for every user that is followed successfully. We use a timer to only execute the completion block once no more saveEventually blocks have been called in 2 seconds
@@ -424,7 +422,7 @@ typedef enum {
 
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 0.01 * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Follow All" style:UIBarButtonItemStyleBordered target:self action:@selector(followAllFriendsButtonAction:)];
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Follow All" style:UIBarButtonItemStylePlain target:self action:@selector(followAllFriendsButtonAction:)];
 
         NSMutableArray *indexPaths = [NSMutableArray arrayWithCapacity:self.objects.count];
         for (int r = 0; r < self.objects.count; r++) {
@@ -434,7 +432,7 @@ typedef enum {
             cell.followButton.selected = NO;
             [indexPaths addObject:indexPath];
         }
-        
+
         [self.tableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
         [MBProgressHUD hideAllHUDsForView:[UIApplication sharedApplication].keyWindow animated:YES];
 
@@ -466,23 +464,23 @@ typedef enum {
 }
 
 - (void)configureUnfollowAllButton {
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Unfollow All" style:UIBarButtonItemStyleBordered target:self action:@selector(unfollowAllFriendsButtonAction:)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Unfollow All" style:UIBarButtonItemStylePlain target:self action:@selector(unfollowAllFriendsButtonAction:)];
 }
 
 - (void)configureFollowAllButton {
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Follow All" style:UIBarButtonItemStyleBordered target:self action:@selector(followAllFriendsButtonAction:)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Follow All" style:UIBarButtonItemStylePlain target:self action:@selector(followAllFriendsButtonAction:)];
 }
 
 - (void)presentMailComposeViewController:(NSString *)recipient {
     // Create the compose email view controller
     MFMailComposeViewController *composeEmailViewController = [[MFMailComposeViewController alloc] init];
-    
+
     // Set the recipient to the selected email and a default text
     [composeEmailViewController setMailComposeDelegate:self];
     [composeEmailViewController setSubject:@"Join me on Anypic"];
     [composeEmailViewController setToRecipients:[NSArray arrayWithObjects:recipient, nil]];
     [composeEmailViewController setMessageBody:@"<h2>Share your pictures, share your story.</h2><p><a href=\"http://anypic.org\">Anypic</a> is the easiest way to share photos with your friends. Get the app and share your fun photos with the world.</p><p><a href=\"http://anypic.org\">Anypic</a> is fully powered by <a href=\"http://parse.com\">Parse</a>.</p>" isHTML:YES];
-    
+
     // Dismiss the current modal view controller and display the compose email one.
     // Note that we do not animate them. Doing so would require us to present the compose
     // mail one only *after* the address book is dismissed.
@@ -493,12 +491,12 @@ typedef enum {
 - (void)presentMessageComposeViewController:(NSString *)recipient {
     // Create the compose text message view controller
     MFMessageComposeViewController *composeTextViewController = [[MFMessageComposeViewController alloc] init];
-    
+
     // Send the destination phone number and a default text
     [composeTextViewController setMessageComposeDelegate:self];
     [composeTextViewController setRecipients:[NSArray arrayWithObjects:recipient, nil]];
     [composeTextViewController setBody:@"Check out Anypic! http://anypic.org"];
-    
+
     // Dismiss the current modal view controller and display the compose text one.
     // See previous use for reason why these are not animated.
     [self dismissViewControllerAnimated:NO completion:nil];

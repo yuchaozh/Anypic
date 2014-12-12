@@ -27,7 +27,7 @@ enum ActionSheetTags {
 @property (nonatomic, assign) BOOL likersQueryInProgress;
 @end
 
-static const CGFloat kPAPCellInsetWidth = 20.0f;
+static const CGFloat kPAPCellInsetWidth = 0.0f;
 
 @implementation PAPPhotoDetailsViewController
 
@@ -75,7 +75,7 @@ static const CGFloat kPAPCellInsetWidth = 20.0f;
     
     // Set table view properties
     UIView *texturedBackgroundView = [[UIView alloc] initWithFrame:self.view.bounds];
-    texturedBackgroundView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"BackgroundLeather.png"]];
+    texturedBackgroundView.backgroundColor = [UIColor blackColor];
     self.tableView.backgroundView = texturedBackgroundView;
     
     // Set table header
@@ -90,13 +90,7 @@ static const CGFloat kPAPCellInsetWidth = 20.0f;
     commentTextField.delegate = self;
     self.tableView.tableFooterView = footerView;
 
-    if (NSClassFromString(@"UIActivityViewController")) {
-        // Use UIActivityViewController if it is available (iOS 6 +)
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(activityButtonAction:)];
-    } else if ([self currentUserOwnsPhoto]) {
-        // Else we only want to show an action button if the user owns the photo and has permission to delete it.
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonAction:)];
-    }
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(activityButtonAction:)];
     
     // Register to be notified when the keyboard will be shown to scroll the view
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
@@ -189,7 +183,7 @@ static const CGFloat kPAPCellInsetWidth = 20.0f;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForNextPageAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString *CellIdentifier = @"NextPage";
+    static NSString *CellIdentifier = @"NextPageDetails";
     
     PAPLoadMoreCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     
@@ -304,19 +298,16 @@ static const CGFloat kPAPCellInsetWidth = 20.0f;
 }
 
 - (void)activityButtonAction:(id)sender {
-    if (NSClassFromString(@"UIActivityViewController")) {
-        // TODO: Need to do something when the photo hasn't finished downloading!
-        if ([[self.photo objectForKey:kPAPPhotoPictureKey] isDataAvailable]) {
-            [self showShareSheet];
-        } else {
-            [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-            [[self.photo objectForKey:kPAPPhotoPictureKey] getDataInBackgroundWithBlock:^(NSData *data, NSError *error) {
-                [MBProgressHUD hideHUDForView:self.view animated:YES];
-                if (!error) {
-                    [self showShareSheet];
-                }
-            }];
-        }
+    if ([[self.photo objectForKey:kPAPPhotoPictureKey] isDataAvailable]) {
+        [self showShareSheet];
+    } else {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        [[self.photo objectForKey:kPAPPhotoPictureKey] getDataInBackgroundWithBlock:^(NSData *data, NSError *error) {
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+            if (!error) {
+                [self showShareSheet];
+            }
+        }];
     }
 }
 
@@ -354,6 +345,7 @@ static const CGFloat kPAPCellInsetWidth = 20.0f;
 
 - (void)shouldPresentAccountViewForUser:(PFUser *)user {
     PAPAccountViewController *accountViewController = [[PAPAccountViewController alloc] initWithStyle:UITableViewStylePlain];
+    NSLog(@"Presenting account view controller with user: %@", user);
     [accountViewController setUser:user];
     [self.navigationController pushViewController:accountViewController animated:YES];
 }

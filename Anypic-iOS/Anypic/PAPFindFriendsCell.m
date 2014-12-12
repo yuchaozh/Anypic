@@ -32,11 +32,13 @@
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        self.contentView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"BackgroundFindFriendsCell.png"]];
+        self.backgroundColor = [UIColor blackColor];
         self.selectionStyle = UITableViewCellSelectionStyleNone;
 
         self.avatarImageView = [[PAPProfileImageView alloc] init];
         self.avatarImageView.frame = CGRectMake( 10.0f, 14.0f, 40.0f, 40.0f);
+        self.avatarImageView.layer.cornerRadius = 23.0f;
+        self.avatarImageView.layer.masksToBounds = YES;
         [self.contentView addSubview:self.avatarImageView];
         
         self.avatarImageButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -50,15 +52,10 @@
         self.nameButton.backgroundColor = [UIColor clearColor];
         self.nameButton.titleLabel.font = [UIFont boldSystemFontOfSize:16.0f];
         self.nameButton.titleLabel.lineBreakMode = NSLineBreakByTruncatingTail;
-        [self.nameButton setTitleColor:[UIColor colorWithRed:87.0f/255.0f green:72.0f/255.0f blue:49.0f/255.0f alpha:1.0f]
+        [self.nameButton setTitleColor:[UIColor whiteColor]
                               forState:UIControlStateNormal];
-        [self.nameButton setTitleColor:[UIColor colorWithRed:134.0f/255.0f green:100.0f/255.0f blue:65.0f/255.0f alpha:1.0f]
+        [self.nameButton setTitleColor:[UIColor colorWithRed:114.0f/255.0f green:114.0f/255.0f blue:114.0f/255.0f alpha:1.0f]
                               forState:UIControlStateHighlighted];
-        [self.nameButton setTitleShadowColor:[UIColor whiteColor]
-                                    forState:UIControlStateNormal];
-        [self.nameButton setTitleShadowColor:[UIColor whiteColor]
-                                    forState:UIControlStateSelected];
-        [self.nameButton.titleLabel setShadowOffset:CGSizeMake( 0.0f, 1.0f)];
         [self.nameButton addTarget:self action:@selector(didTapUserButtonAction:)
                   forControlEvents:UIControlEventTouchUpInside];
         [self.contentView addSubview:self.nameButton];
@@ -67,8 +64,6 @@
         self.photoLabel.font = [UIFont systemFontOfSize:11.0f];
         self.photoLabel.textColor = [UIColor grayColor];
         self.photoLabel.backgroundColor = [UIColor clearColor];
-        self.photoLabel.shadowColor = [UIColor colorWithWhite:1.0f alpha:0.7f];
-        self.photoLabel.shadowOffset = CGSizeMake( 0.0f, 1.0f);
         [self.contentView addSubview:self.photoLabel];
         
         self.followButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -84,15 +79,10 @@
                            forState:UIControlStateNormal];
         [self.followButton setTitle:@"Following"
                            forState:UIControlStateSelected];
-        [self.followButton setTitleColor:[UIColor colorWithRed:84.0f/255.0f green:57.0f/255.0f blue:45.0f/255.0f alpha:1.0f]
+        [self.followButton setTitleColor:[UIColor colorWithRed:254.0f/255.0f green:149.0f/255.0f blue:50.0f/255.0f alpha:1.0f]
                                 forState:UIControlStateNormal];
         [self.followButton setTitleColor:[UIColor whiteColor]
                                 forState:UIControlStateSelected];
-        [self.followButton setTitleShadowColor:[UIColor colorWithRed:232.0f/255.0f green:203.0f/255.0f blue:168.0f/255.0f alpha:1.0f]
-                                      forState:UIControlStateNormal];
-        [self.followButton setTitleShadowColor:[UIColor blackColor]
-                                      forState:UIControlStateSelected];
-        self.followButton.titleLabel.shadowOffset = CGSizeMake( 0.0f, -1.0f);
         [self.followButton addTarget:self action:@selector(didTapFollowButtonAction:)
                     forControlEvents:UIControlEventTouchUpInside];
         [self.contentView addSubview:self.followButton];
@@ -107,7 +97,11 @@
     user = aUser;
     
     // Configure the cell
-    [avatarImageView setFile:[self.user objectForKey:kPAPUserProfilePicSmallKey]];
+    if ([PAPUtility userHasProfilePictures:self.user]) {
+        [self.avatarImageView setFile:[self.user objectForKey:kPAPUserProfilePicSmallKey]];
+    } else {
+        [self.avatarImageView setImage:[PAPUtility defaultProfilePicture]];
+    }
     
     // Set name 
     NSString *nameString = [self.user objectForKey:kPAPUserDisplayNameKey];

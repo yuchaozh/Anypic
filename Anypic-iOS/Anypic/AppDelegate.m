@@ -19,7 +19,6 @@
 #import "PAPPhotoDetailsViewController.h"
 
 @interface AppDelegate () {
-    NSMutableData *_data;
     BOOL firstLaunch;
 }
 
@@ -44,10 +43,11 @@
 
     // ****************************************************************************
     // Parse initialization
-    // [Parse setApplicationId:@"APPLICATION_ID" clientKey:@"CLIENT_KEY"];
+    [ParseCrashReporting enable];
+    [Parse setApplicationId:@"PklSbwxITu46cOumt6tdWw8Jtg2urg0vj0CrbLr0" clientKey:@"ML2sjwLC7k1RCujNCRP7fxG2HpUxtwzdIR1ElOe7"];
     [PFFacebookUtils initializeFacebook];
     // ****************************************************************************
-    
+  
     // Track app open.
     [PFAnalytics trackAppOpenedWithLaunchOptions:launchOptions];
 
@@ -81,13 +81,17 @@
 }
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    if ([self handleActionURL:url]) {
-        return YES;
+    BOOL wasHandled = false;
+    
+    if ([PFFacebookUtils session]) {
+        wasHandled |= [FBAppCall handleOpenURL:url sourceApplication:sourceApplication withSession:[PFFacebookUtils session]];
+    } else {
+        wasHandled |= [FBAppCall handleOpenURL:url sourceApplication:sourceApplication];
     }
     
-    return [FBAppCall handleOpenURL:url
-                  sourceApplication:sourceApplication
-                        withSession:[PFFacebookUtils session]];
+    wasHandled |= [self handleActionURL:url];
+
+    return wasHandled;
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
@@ -156,59 +160,18 @@
     return ![viewController isEqual:aTabBarController.viewControllers[PAPEmptyTabBarItemIndex]];
 }
 
-
-#pragma mark - PFLoginViewController
-
-- (void)logInViewController:(PFLogInViewController *)logInController didLogInUser:(PFUser *)user {
-    // user has logged in - we need to fetch all of their Facebook data before we let them in
-    if (![self shouldProceedToMainInterface:user]) {
-        self.hud = [MBProgressHUD showHUDAddedTo:self.navController.presentedViewController.view animated:YES];
-        self.hud.labelText = NSLocalizedString(@"Loading", nil);
-        self.hud.dimBackground = YES;
-    }
-    
-    [FBRequestConnection startForMeWithCompletionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
-        if (!error) {
-            [self facebookRequestDidLoad:result];
-        } else {
-            [self facebookRequestDidFailWithError:error];
-        }
-    }];
-}
-
-
-#pragma mark - NSURLConnectionDataDelegate
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    _data = [[NSMutableData alloc] init];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [_data appendData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    [PAPUtility processFacebookProfilePictureData:_data];
-}
-
-
 #pragma mark - AppDelegate
 
 - (BOOL)isParseReachable {
     return self.networkStatus != NotReachable;
 }
 
-- (void)presentLoginViewControllerAnimated:(BOOL)animated {
-    PAPLogInViewController *loginViewController = [[PAPLogInViewController alloc] init];
-    [loginViewController setDelegate:self];
-    loginViewController.fields = PFLogInFieldsFacebook;
-    loginViewController.facebookPermissions = @[ @"user_about_me" ];
-    
-    [self.welcomeViewController presentViewController:loginViewController animated:NO completion:nil];
+- (void)presentLoginViewController:(BOOL)animated {
+    [self.welcomeViewController presentLoginViewController:animated];
 }
 
 - (void)presentLoginViewController {
-    [self presentLoginViewControllerAnimated:YES];
+    [self presentLoginViewController:YES];
 }
 
 - (void)presentTabBarController {    
@@ -221,17 +184,13 @@
     UINavigationController *emptyNavigationController = [[UINavigationController alloc] init];
     UINavigationController *activityFeedNavigationController = [[UINavigationController alloc] initWithRootViewController:self.activityViewController];
     
-    [PAPUtility addBottomDropShadowToNavigationBarForNavigationController:homeNavigationController];
-    [PAPUtility addBottomDropShadowToNavigationBarForNavigationController:emptyNavigationController];
-    [PAPUtility addBottomDropShadowToNavigationBarForNavigationController:activityFeedNavigationController];
-    
     UITabBarItem *homeTabBarItem = [[UITabBarItem alloc] initWithTitle:NSLocalizedString(@"Home", @"Home") image:[[UIImage imageNamed:@"IconHome.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"IconHomeSelected.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
-    [homeTabBarItem setTitleTextAttributes: @{ NSForegroundColorAttributeName: [UIColor colorWithRed:86.0f/255.0f green:55.0f/255.0f blue:42.0f/255.0f alpha:1.0f] } forState:UIControlStateNormal];
-    [homeTabBarItem setTitleTextAttributes: @{ NSForegroundColorAttributeName: [UIColor colorWithRed:129.0f/255.0f green:99.0f/255.0f blue:69.0f/255.0f alpha:1.0f] } forState:UIControlStateSelected];
+    [homeTabBarItem setTitleTextAttributes: @{ NSForegroundColorAttributeName: [UIColor whiteColor], NSFontAttributeName: [UIFont boldSystemFontOfSize:13] } forState:UIControlStateSelected];
+    [homeTabBarItem setTitleTextAttributes: @{ NSForegroundColorAttributeName: [UIColor colorWithRed:114.0f/255.0f green:114.0f/255.0f blue:114.0f/255.0f alpha:1.0f], NSFontAttributeName: [UIFont boldSystemFontOfSize:13] } forState:UIControlStateNormal];
     
     UITabBarItem *activityFeedTabBarItem = [[UITabBarItem alloc] initWithTitle:NSLocalizedString(@"Activity", @"Activity") image:[[UIImage imageNamed:@"IconTimeline.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"IconTimelineSelected.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
-    [activityFeedTabBarItem setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor colorWithRed:86.0f/255.0f green:55.0f/255.0f blue:42.0f/255.0f alpha:1.0f] } forState:UIControlStateNormal];
-    [activityFeedTabBarItem setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor colorWithRed:129.0f/255.0f green:99.0f/255.0f blue:69.0f/255.0f alpha:1.0f] } forState:UIControlStateSelected];
+    [activityFeedTabBarItem setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor whiteColor], NSFontAttributeName: [UIFont boldSystemFontOfSize:13] } forState:UIControlStateSelected];
+    [activityFeedTabBarItem setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor colorWithRed:114.0f/255.0f green:114.0f/255.0f blue:114.0f/255.0f alpha:1.0f], NSFontAttributeName: [UIFont boldSystemFontOfSize:13] } forState:UIControlStateNormal];
     
     [homeNavigationController setTabBarItem:homeTabBarItem];
     [activityFeedNavigationController setTabBarItem:activityFeedTabBarItem];
@@ -241,14 +200,14 @@
     
     [self.navController setViewControllers:@[ self.welcomeViewController, self.tabBarController ] animated:NO];
 
-    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
-     UIRemoteNotificationTypeAlert|
-     UIRemoteNotificationTypeSound];
-        
-    // Download user's profile picture
-    NSURL *profilePictureURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://graph.facebook.com/%@/picture?type=large", [[PFUser currentUser] objectForKey:kPAPUserFacebookIDKey]]];
-    NSURLRequest *profilePictureURLRequest = [NSURLRequest requestWithURL:profilePictureURL cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0f]; // Facebook profile picture cache policy: Expires in 2 weeks
-    [NSURLConnection connectionWithRequest:profilePictureURLRequest delegate:self];
+    // Register for Push Notitications
+    UIUserNotificationType userNotificationTypes = (UIUserNotificationTypeAlert |
+                                                    UIUserNotificationTypeBadge |
+                                                    UIUserNotificationTypeSound);
+    UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:userNotificationTypes
+                                                                             categories:nil];
+    [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
+    [[UIApplication sharedApplication] registerForRemoteNotifications];
 }
 
 - (void)logOut {
@@ -269,6 +228,7 @@
     
     // Log out
     [PFUser logOut];
+    [FBSession setActiveSession:nil];
     
     // clear out cached data, view controllers, etc
     [self.navController popToRootViewControllerAnimated:NO];
@@ -285,32 +245,27 @@
 // Set up appearance parameters to achieve Anypic's custom look and feel
 - (void)setupAppearance {
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
-    
-    NSShadow *shadow = [[NSShadow alloc] init];
-    shadow.shadowColor = [UIColor colorWithWhite:0.0f alpha:0.750f];
-    shadow.shadowOffset = CGSizeMake(0.0f, 1.0f);
 
-    [[UINavigationBar appearance] setTintColor:[UIColor colorWithRed:0.498f green:0.388f blue:0.329f alpha:1.0f]];
+    [[UINavigationBar appearance] setTintColor:[UIColor colorWithRed:254.0f/255.0f green:149.0f/255.0f blue:50.0f/255.0f alpha:1.0f]];
+    [[UINavigationBar appearance] setBarTintColor:[UIColor colorWithRed:0.0f/255.0f green:0.0f/255.0f blue:0.0f/255.0f alpha:1.0f]];
+  
     [[UINavigationBar appearance] setTitleTextAttributes:@{
-                                NSForegroundColorAttributeName: [UIColor whiteColor],
-                                NSShadowAttributeName: shadow
+                                NSForegroundColorAttributeName: [UIColor whiteColor]
                                 }];
-
-    [[UINavigationBar appearance] setBackgroundImage:[UIImage imageNamed:@"BackgroundNavigationBar.png"]
-                                       forBarMetrics:UIBarMetricsDefault];
-    
+//
+//    [[UINavigationBar appearance] setBackgroundImage:[UIImage imageNamed:@"BackgroundNavigationBar.png"]
+//                                       forBarMetrics:UIBarMetricsDefault];
+//
     [[UIButton appearanceWhenContainedIn:[UINavigationBar class], nil]
-     setTitleColor:[UIColor colorWithRed:214.0f/255.0f green:210.0f/255.0f blue:197.0f/255.0f alpha:1.0f]
+     setTitleColor:[UIColor colorWithRed:254.0f/255.0f green:149.0f/255.0f blue:50.0f/255.0f alpha:1.0f]
      forState:UIControlStateNormal];
     
     [[UIBarButtonItem appearance] setTitleTextAttributes:@{
-                                NSForegroundColorAttributeName:
-                                    [UIColor colorWithRed:214.0f/255.0f green:210.0f/255.0f blue:197.0f/255.0f alpha:1.0f],
-                                NSShadowAttributeName: shadow
+                                NSForegroundColorAttributeName:[UIColor colorWithRed:254.0f/255.0f green:149.0f/255.0f blue:50.0f/255.0f alpha:1.0f]
                                 }
-                                                forState:UIControlStateNormal];
+                                forState:UIControlStateNormal];
     
-    [[UISearchBar appearance] setTintColor:[UIColor colorWithRed:32.0f/255.0f green:19.0f/255.0f blue:16.0f/255.0f alpha:1.0f]];
+    [[UISearchBar appearance] setTintColor:[UIColor colorWithRed:254.0f/255.0f green:149.0f/255.0f blue:50.0f/255.0f alpha:1.0f]];
 }
 
 - (void)monitorReachability {
@@ -362,6 +317,7 @@
                     self.tabBarController.selectedViewController = homeNavigationController;
                     
                     PAPAccountViewController *accountViewController = [[PAPAccountViewController alloc] initWithStyle:UITableViewStylePlain];
+                    NSLog(@"Presenting account view controller with user: %@", user);
                     accountViewController.user = (PFUser *)user;
                     [homeNavigationController pushViewController:accountViewController animated:YES];
                 }
@@ -377,15 +333,11 @@
 }
 
 - (BOOL)shouldProceedToMainInterface:(PFUser *)user {
-    if ([PAPUtility userHasValidFacebookData:[PFUser currentUser]]) {
-        [MBProgressHUD hideHUDForView:self.navController.presentedViewController.view animated:YES];
-        [self presentTabBarController];
+    [MBProgressHUD hideHUDForView:self.navController.presentedViewController.view animated:YES];
+    [self presentTabBarController];
 
-        [self.navController dismissViewControllerAnimated:YES completion:nil];
-        return YES;
-    }
-    
-    return NO;
+    [self.navController dismissViewControllerAnimated:YES completion:nil];
+    return YES;
 }
 
 - (BOOL)handleActionURL:(NSURL *)url {
@@ -397,6 +349,7 @@
         if ([[url fragment] rangeOfString:@"^pic/[A-Za-z0-9]{10}$" options:NSRegularExpressionSearch].location != NSNotFound) {
             NSString *photoObjectId = [[url fragment] substringWithRange:NSMakeRange(4, 10)];
             if (photoObjectId && photoObjectId.length > 0) {
+              NSLog(@"WOOP: %@", photoObjectId);
                 [self shouldNavigateToPhoto:[PFObject objectWithoutDataWithClassName:kPAPPhotoClassKey objectId:photoObjectId]];
                 return YES;
             }
@@ -426,136 +379,18 @@
     }];
 }
 
-- (void)facebookRequestDidLoad:(id)result {
-    // This method is called twice - once for the user's /me profile, and a second time when obtaining their friends. We will try and handle both scenarios in a single method.
-    PFUser *user = [PFUser currentUser];
-    
-    NSArray *data = [result objectForKey:@"data"];
-    
-    if (data) {
-        // we have friends data
-        NSMutableArray *facebookIds = [[NSMutableArray alloc] initWithCapacity:[data count]];
-        for (NSDictionary *friendData in data) {
-            if (friendData[@"id"]) {
-                [facebookIds addObject:friendData[@"id"]];
-            }
-        }
-        
-        // cache friend data
-        [[PAPCache sharedCache] setFacebookFriends:facebookIds];
-        
-        if (user) {
-            if ([user objectForKey:kPAPUserFacebookFriendsKey]) {
-                [user removeObjectForKey:kPAPUserFacebookFriendsKey];
-            }
-            
-            if (![user objectForKey:kPAPUserAlreadyAutoFollowedFacebookFriendsKey]) {
-                self.hud.labelText = NSLocalizedString(@"Following Friends", nil);
-                firstLaunch = YES;
-                
-                [user setObject:@YES forKey:kPAPUserAlreadyAutoFollowedFacebookFriendsKey];
-                NSError *error = nil;
-                
-                // find common Facebook friends already using Anypic
-                PFQuery *facebookFriendsQuery = [PFUser query];
-                [facebookFriendsQuery whereKey:kPAPUserFacebookIDKey containedIn:facebookIds];
-                
-                // auto-follow Parse employees
-                PFQuery *parseEmployeesQuery = [PFUser query];
-                [parseEmployeesQuery whereKey:kPAPUserFacebookIDKey containedIn:kPAPParseEmployeeAccounts];
-                
-                // combined query
-                PFQuery *query = [PFQuery orQueryWithSubqueries:[NSArray arrayWithObjects:parseEmployeesQuery,facebookFriendsQuery, nil]];
-                
-                NSArray *anypicFriends = [query findObjects:&error];
-                
-                if (!error) {
-                    [anypicFriends enumerateObjectsUsingBlock:^(PFUser *newFriend, NSUInteger idx, BOOL *stop) {
-                        PFObject *joinActivity = [PFObject objectWithClassName:kPAPActivityClassKey];
-                        [joinActivity setObject:user forKey:kPAPActivityFromUserKey];
-                        [joinActivity setObject:newFriend forKey:kPAPActivityToUserKey];
-                        [joinActivity setObject:kPAPActivityTypeJoined forKey:kPAPActivityTypeKey];
-                        
-                        PFACL *joinACL = [PFACL ACL];
-                        [joinACL setPublicReadAccess:YES];
-                        joinActivity.ACL = joinACL;
-                        
-                        // make sure our join activity is always earlier than a follow
-                        [joinActivity saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                            [PAPUtility followUserInBackground:newFriend block:^(BOOL succeeded, NSError *error) {
-                                // This block will be executed once for each friend that is followed.
-                                // We need to refresh the timeline when we are following at least a few friends
-                                // Use a timer to avoid refreshing innecessarily
-                                if (self.autoFollowTimer) {
-                                    [self.autoFollowTimer invalidate];
-                                }
-                                
-                                self.autoFollowTimer = [NSTimer scheduledTimerWithTimeInterval:3.0f target:self selector:@selector(autoFollowTimerFired:) userInfo:nil repeats:NO];
-                            }];
-                        }];
-                    }];
-                }
-                
-                if (![self shouldProceedToMainInterface:user]) {
-                    [self logOut];
-                    return;
-                }
-                
-                if (!error) {
-                    [MBProgressHUD hideHUDForView:self.navController.presentedViewController.view animated:NO];
-                    if (anypicFriends.count > 0) {
-                        self.hud = [MBProgressHUD showHUDAddedTo:self.homeViewController.view animated:NO];
-                        self.hud.dimBackground = YES;
-                        self.hud.labelText = NSLocalizedString(@"Following Friends", nil);
-                    } else {
-                        [self.homeViewController loadObjects];
-                    }
-                }
-            }
-            
-            [user saveEventually];
+
+
+- (void)autoFollowUsers {
+    firstLaunch = YES;
+    [PFCloud callFunctionInBackground:@"autoFollowUsers" withParameters:nil block:^(id object, NSError *error) {
+        if (error) {
+            NSLog(@"Error auto following users: %@", error);
         } else {
-            NSLog(@"No user session found. Forcing logOut.");
-            [self logOut];
+            [MBProgressHUD hideHUDForView:self.navController.presentedViewController.view animated:NO];
+            [self.homeViewController loadObjects];
         }
-    } else {
-        self.hud.labelText = NSLocalizedString(@"Creating Profile", nil);
-
-        if (user) {
-            NSString *facebookName = result[@"name"];
-            if (facebookName && [facebookName length] != 0) {
-                [user setObject:facebookName forKey:kPAPUserDisplayNameKey];
-            } else {
-                [user setObject:@"Someone" forKey:kPAPUserDisplayNameKey];
-            }
-            
-            NSString *facebookId = result[@"id"];
-            if (facebookId && [facebookId length] != 0) {
-                [user setObject:facebookId forKey:kPAPUserFacebookIDKey];
-            }
-            
-            [user saveEventually];
-        }
-        
-        [FBRequestConnection startForMyFriendsWithCompletionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
-            if (!error) {
-                [self facebookRequestDidLoad:result];
-            } else {
-                [self facebookRequestDidFailWithError:error];
-            }
-        }];
-    }
-}
-
-- (void)facebookRequestDidFailWithError:(NSError *)error {
-    NSLog(@"Facebook error: %@", error);
-    
-    if ([PFUser currentUser]) {
-        if ([[error userInfo][@"error"][@"type"] isEqualToString:@"OAuthException"]) {
-            NSLog(@"The Facebook token was invalidated. Logging out.");
-            [self logOut];
-        }
-    }
+    }];
 }
 
 @end
