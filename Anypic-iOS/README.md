@@ -21,6 +21,8 @@ Anypic requires Xcode 5 and iOS 7. The [tutorial](https://parse.com/tutorials/an
 [Parse setApplicationId:@"APPLICATION_ID" clientKey:@"CLIENT_KEY];"
 ```
 
+4. Select the `Anypic` target and go to `Build Phases`. Under `Upload Symbol Files`, update line 3 to point to your Cloud Code folder, if any. If you're not using Cloud Code, feel free to remove the `Upload Symbol Files` section.
+
 #### Configuring Anypic's Facebook integration
 
 1. Set up a Facebook app at http://developers.facebook.com/apps
