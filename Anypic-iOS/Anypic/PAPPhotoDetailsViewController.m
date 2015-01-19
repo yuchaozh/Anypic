@@ -15,6 +15,7 @@
 #import "PAPLoadMoreCell.h"
 #import "PAPUtility.h"
 #import "MBProgressHUD.h"
+#import "AppDelegate.h"
 
 enum ActionSheetTags {
     MainActionSheetTag = 0,
