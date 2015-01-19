@@ -7,6 +7,7 @@
 //
 
 #include "Shared.xcconfig"
+#include "Pods/Target Support Files/Pods/Pods.release.xcconfig"
 
 CODE_SIGN_IDENTITY = 
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = iPhone Distribution: Parse Inc

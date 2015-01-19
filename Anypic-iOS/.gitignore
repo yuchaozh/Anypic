@@ -19,5 +19,7 @@ Resources/Configuration/Private.xcconfig
 .pid_file
 .sass-cache
 
-# OS X
-.DS_Store
+# Cocoapods
+Pods
+Podfile.lock
+Anypic.xcworkspace
