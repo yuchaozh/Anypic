@@ -11,11 +11,17 @@ Anypic requires Xcode 5 and iOS 7. The [tutorial](https://parse.com/tutorials/an
 
 #### Setting up your Xcode project
 
-1. Open the Xcode project at `Anypic-iOS/Anypic.xcodeproj`.
+1. Install all project dependencies from [CocoaPods](http://cocoapods.org/#install) by running this script:
+```
+cd Anypic-iOS
+pod install
+```
 
-2. Create your Anypic App on [Parse](https://parse.com/apps).
+2. Open the Xcode workspace at `Anypic-iOS/Anypic.xcworkspace`.
 
-3. Copy your new app's application id and client key into `AppDelegate.m`:
+3. Create your Anypic App on [Parse](https://parse.com/apps).
+
+4. Copy your new app's application id and client key into `AppDelegate.m`:
 
 ```objective-c
 [Parse setApplicationId:@"APPLICATION_ID" clientKey:@"CLIENT_KEY];"

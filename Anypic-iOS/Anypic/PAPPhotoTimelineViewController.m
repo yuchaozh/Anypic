@@ -12,6 +12,7 @@
 #import "PAPPhotoDetailsViewController.h"
 #import "PAPUtility.h"
 #import "PAPLoadMoreCell.h"
+#import "AppDelegate.h"
 
 @interface PAPPhotoTimelineViewController ()
 @property (nonatomic, assign) BOOL shouldReloadOnAppear;

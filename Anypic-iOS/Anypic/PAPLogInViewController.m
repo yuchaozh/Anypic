@@ -19,6 +19,12 @@
 
 @end
 
+@interface FBSession (Private)
+
+- (void)clearAffinitizedThread;
+
+@end
+
 @implementation PAPLogInViewController
 
 #pragma mark - UIViewController
@@ -68,8 +74,8 @@
 
 - (void)handleFacebookSession {
     if ([PFUser currentUser]) {
-        if (self.delegate && [self.delegate respondsToSelector:@selector(logInViewControllerDidLogUserIn)]) {
-            [self.delegate performSelector:@selector(logInViewController:DidLogUserIn:) withObject:[PFUser currentUser]];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(logInViewControllerDidLogUserIn:)]) {
+            [self.delegate performSelector:@selector(logInViewControllerDidLogUserIn:) withObject:[PFUser currentUser]];
         }
         return;
     }
