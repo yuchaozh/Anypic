@@ -141,7 +141,7 @@ static TTTTimeIntervalFormatter *timeFormatter;
                                                     options:NSStringDrawingUsesLineFragmentOrigin
                                                  attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:13.0f]}
                                                     context:nil].size;
-    [self.contentLabel setFrame:CGRectMake(nameX, vertTextBorderSpacing + 5.0f, contentSize.width, contentSize.height)];
+    [self.contentLabel setFrame:CGRectMake(nameX, vertTextBorderSpacing + 6.0f, contentSize.width, contentSize.height)];
     
     // Layout the timestamp label
     CGSize timeSize = [self.timeLabel.text boundingRectWithSize:CGSizeMake(horizontalTextSpace, CGFLOAT_MAX)
