@@ -69,6 +69,18 @@ typedef enum {
     self.tableView.backgroundColor = [UIColor blackColor];
 
     self.navigationItem.titleView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"TitleFindFriends.png"]];
+    
+    if (self.navigationController.viewControllers[0] == self) {
+        UIBarButtonItem *dismissLeftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Back"
+                                                                                     style:UIBarButtonItemStylePlain
+                                                                                    target:self
+                                                                                    action:@selector(dismissPresentingViewController)];
+        
+        self.navigationItem.leftBarButtonItem = dismissLeftBarButtonItem;
+    }
+    else {
+        self.navigationItem.leftBarButtonItem = nil;
+    }
 
     if ([MFMailComposeViewController canSendMail] || [MFMessageComposeViewController canSendText]) {
         self.headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 67)];
@@ -98,6 +110,10 @@ typedef enum {
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.tableView.separatorColor = [UIColor colorWithRed:30.0f/255.0f green:30.0f/255.0f blue:30.0f/255.0f alpha:1.0f];
+}
+
+- (void)dismissPresentingViewController {
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - UITableViewDelegate
