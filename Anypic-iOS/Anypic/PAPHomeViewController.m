@@ -10,10 +10,14 @@
 #import "PAPSettingsActionSheetDelegate.h"
 #import "PAPSettingsButtonItem.h"
 #import "PAPFindFriendsViewController.h"
+#import "PAPAccountViewController.h"
 #import "MBProgressHUD.h"
+#import "AppDelegate.h"
 
-@interface PAPHomeViewController ()
+@interface PAPHomeViewController () <UIActionSheetDelegate>
 @property (nonatomic, strong) PAPSettingsActionSheetDelegate *settingsActionSheetDelegate;
+@property (nonatomic, strong) UINavigationController *presentingAccountNavController;
+@property (nonatomic, strong) UINavigationController *presentingFriendNavController;
 @property (nonatomic, strong) UIView *blankTimelineView;
 @end
 
@@ -24,6 +28,24 @@
 
 
 #pragma mark - UIViewController
+
+- (UINavigationController *)presentingAccountNavController {
+    if (!_presentingAccountNavController) {
+        
+        PAPAccountViewController *accountViewController = [[PAPAccountViewController alloc] initWithUser:[PFUser currentUser]];
+        _presentingAccountNavController = [[UINavigationController alloc] initWithRootViewController:accountViewController];
+    }
+    return _presentingAccountNavController;
+}
+
+- (UINavigationController *)presentingFriendNavController {
+    if (!_presentingFriendNavController) {
+        
+        PAPFindFriendsViewController *findFriendsVC = [[PAPFindFriendsViewController alloc] init];
+        _presentingFriendNavController = [[UINavigationController alloc] initWithRootViewController:findFriendsVC];
+    }
+    return _presentingFriendNavController;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -68,8 +90,7 @@
 #pragma mark - ()
 
 - (void)settingsButtonAction:(id)sender {
-    self.settingsActionSheetDelegate = [[PAPSettingsActionSheetDelegate alloc] initWithNavigationController:self.navigationController];
-    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil delegate:self.settingsActionSheetDelegate cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"My Profile",@"Find Friends",@"Log Out", nil];
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"My Profile",@"Find Friends",@"Log Out", nil];
     
     [actionSheet showFromTabBar:self.tabBarController.tabBar];
 }
@@ -79,4 +100,30 @@
     PAPFindFriendsViewController *detailViewController = [[PAPFindFriendsViewController alloc] init];
     [self.navigationController pushViewController:detailViewController animated:YES];
 }
+
+#pragma mark - UIActionSheetDelegate
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    
+    switch (buttonIndex) {
+        case 0: {
+            [self presentViewController:self.presentingAccountNavController animated:YES completion:nil];
+            
+            break;
+        }
+        
+        case 1: {
+            [self presentViewController:self.presentingFriendNavController animated:YES completion:nil];
+            break;
+        }
+            
+        case 2: {
+            // Log out user and present the login view controller
+            [(AppDelegate *)[[UIApplication sharedApplication] delegate] logOut];
+        }
+            
+        default:
+            break;
+    }
+}
+
 @end

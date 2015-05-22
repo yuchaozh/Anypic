@@ -48,6 +48,19 @@
 
     self.navigationItem.titleView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"LogoNavigationBar.png"]];
     
+    if (self.navigationController.viewControllers[0] == self) {
+        UIBarButtonItem *dismissLeftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Back"
+                                                                                     style:UIBarButtonItemStylePlain
+                                                                                    target:self
+                                                                                    action:@selector(dismissPresentingViewController)];
+        
+        self.navigationItem.leftBarButtonItem = dismissLeftBarButtonItem;
+    }
+    else {
+        self.navigationItem.leftBarButtonItem = nil;
+    }
+    
+    
     self.headerView = [[UIView alloc] initWithFrame:CGRectMake( 0.0f, 0.0f, self.tableView.bounds.size.width, 222.0f)];
     [self.headerView setBackgroundColor:[UIColor clearColor]]; // should be clear, this will be the container for our avatar, photo count, follower count, following count, and so on
     
@@ -219,6 +232,10 @@
             }
         }];
     }
+}
+
+- (void)dismissPresentingViewController {
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - PFQueryTableViewController
