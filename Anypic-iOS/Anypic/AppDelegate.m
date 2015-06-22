@@ -44,7 +44,7 @@
     // ****************************************************************************
     // Parse initialization
     [ParseCrashReporting enable];
-    [Parse setApplicationId:@"PklSbwxITu46cOumt6tdWw8Jtg2urg0vj0CrbLr0" clientKey:@"ML2sjwLC7k1RCujNCRP7fxG2HpUxtwzdIR1ElOe7"];
+    [Parse setApplicationId:@"mSVwpZNpy3hQudO2pYL5gnFUdKMLSF0qFEhxiDmJ" clientKey:@"ira4uc8kB5w08jpHTjwxe412ZBVjvByt5TAriYIT"];
     [PFFacebookUtils initializeFacebook];
     // ****************************************************************************
   
@@ -372,7 +372,7 @@
             
             PAPPhotoDetailsViewController *detailViewController = [[PAPPhotoDetailsViewController alloc] initWithPhoto:object];
             [homeNavigationController pushViewController:detailViewController animated:YES];
-        }
+        }ƒ
     }];
 }
 
